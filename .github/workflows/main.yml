@@ -40,9 +40,9 @@ jobs:
       - name: lint
         run: |
           if [ ${{ matrix.lint }} = "shfmt" ]; then
-              shfmt -w -i 2 build.sh
+              shfmt -w -i 2 ksupatch.sh
           else
-              ${{ matrix.lint }} build.sh
+              ${{ matrix.lint }} ksupatch.sh
           fi
 
   ci-test:
