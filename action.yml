@@ -51,6 +51,10 @@ inputs:
     description: 'KernelSU default branch'
     required: false
     default: "main"
+  ksu-lkm:
+    description: "Build KernelSU as a linux kernel module"
+    required: false
+    default: false
   overlayfs:
     description: 'Enable Overlayfs for ksu'
     required: false
@@ -287,24 +291,28 @@ runs:
             else
                 curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s ${{ inputs.ksu-version }}
             fi
-            if grep -q "CONFIG_KPROBES=y" "arch/${{ inputs.arch }}/configs/${{ inputs.config }}" ; then
-                echo "CONFIG_KPROBES is enabled, skip patch."
+            if [ ${{ inputs.ksu-lkm }} = true ]; then
+                echo "CONFIG_KSU_MODULE" >> arch/${{ inputs.arch }}/configs/${{ inputs.config }}
             else
-                if cat fs/open.c | grep -i ksu >/dev/null ; then
-                    echo "patched,skip patch"
+                if grep -q "CONFIG_KPROBES=y" "arch/${{ inputs.arch }}/configs/${{ inputs.config }}" ; then
+                    echo "CONFIG_KPROBES is enabled, skip patch."
                 else
-                    if cat fs/open.c | grep -i do_faccessat >/dev/null ; then
-                        echo  Kernel SUBLEVEL is "$SUBLEVEL" >/dev/null
+                    if cat fs/open.c | grep -i ksu >/dev/null ; then
+                        echo "patched,skip patch"
                     else
-                        wget https://github.com/dabao1955/kernel_build_action/raw/main/ksupatchs/KernelSU-4.9-faccessat-hook.patch
-                        git apply KernelSU-4.9-faccessat-hook.patch
-                    fi
-                    if grep -q "CONFIG_OPLUS_KERNEL_SECURE_GUARD" fs/exec.c ; then
-                        wget https://github.com/dabao1955/kernel_build_action/raw/main/ksupatchs/KernelSU-hook-OPLUS.patch
-                        git apply KernelSU-hook-OPLUS.patch
-                    else
-                        wget https://github.com/dabao1955/kernel_build_action/raw/main/ksupatchs/KernelSU-hook.patch
-                        git apply KernelSU-hook.patch
+                        if cat fs/open.c | grep -i do_faccessat >/dev/null ; then
+                            echo  Kernel SUBLEVEL is "$SUBLEVEL" >/dev/null
+                        else
+                            wget https://github.com/dabao1955/kernel_build_action/raw/main/ksupatchs/KernelSU-4.9-faccessat-hook.patch
+                            git apply KernelSU-4.9-faccessat-hook.patch
+                        fi
+                        if grep -q "CONFIG_OPLUS_KERNEL_SECURE_GUARD" fs/exec.c ; then
+                            wget https://github.com/dabao1955/kernel_build_action/raw/main/ksupatchs/KernelSU-hook-OPLUS.patch
+                            git apply KernelSU-hook-OPLUS.patch
+                        else
+                            wget https://github.com/dabao1955/kernel_build_action/raw/main/ksupatchs/KernelSU-hook.patch
+                            git apply KernelSU-hook.patch
+                        fi
                     fi
                 fi
             fi
@@ -422,7 +430,7 @@ runs:
          echo "::endgroup::"
 
          unset USE_CCACHE CLANG_TRIPLE COMPILE_ARM32 CROSS_COMPILE CLANG_PATH HOMES SUBLEVEL
-         
+
          if [ ${{ inputs.anykernel3 }} = false ]; then
             echo "::group:: Preparing to Upload boot.img"
             git clone https://github.com/Shubhamvis98/AIK
@@ -473,6 +481,7 @@ runs:
             fi
             echo "::endgroup::"
          fi
+         test -f out/drivers/kernelsu/*.ko && mv out/drivers/kernelsu/*.ko out
 
     - id: uploadi
       if: ${{ inputs.release == 'false' && inputs.anykernel3 == 'false' }}
