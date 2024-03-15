@@ -292,28 +292,12 @@ runs:
                 curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s ${{ inputs.ksu-version }}
             fi
             if [ ${{ inputs.ksu-lkm }} = true ]; then
-                echo "CONFIG_KSU_MODULE" >> arch/${{ inputs.arch }}/configs/${{ inputs.config }}
+                echo "CONFIG_KSU_MODULE=y" >> arch/${{ inputs.arch }}/configs/${{ inputs.config }}
             else
                 if grep -q "CONFIG_KPROBES=y" "arch/${{ inputs.arch }}/configs/${{ inputs.config }}" ; then
                     echo "CONFIG_KPROBES is enabled, skip patch."
                 else
-                    if cat fs/open.c | grep -i ksu >/dev/null ; then
-                        echo "patched,skip patch"
-                    else
-                        if cat fs/open.c | grep -i do_faccessat >/dev/null ; then
-                            echo  Kernel SUBLEVEL is "$SUBLEVEL" >/dev/null
-                        else
-                            wget https://github.com/dabao1955/kernel_build_action/raw/main/ksupatchs/KernelSU-4.9-faccessat-hook.patch
-                            git apply KernelSU-4.9-faccessat-hook.patch
-                        fi
-                        if grep -q "CONFIG_OPLUS_KERNEL_SECURE_GUARD" fs/exec.c ; then
-                            wget https://github.com/dabao1955/kernel_build_action/raw/main/ksupatchs/KernelSU-hook-OPLUS.patch
-                            git apply KernelSU-hook-OPLUS.patch
-                        else
-                            wget https://github.com/dabao1955/kernel_build_action/raw/main/ksupatchs/KernelSU-hook.patch
-                            git apply KernelSU-hook.patch
-                        fi
-                    fi
+                    curl -SsL https://github.com/dabao1955/kernel_build_action/raw/main/ksupatchs.sh | bash
                 fi
             fi
             echo "::endgroup::"
@@ -481,7 +465,7 @@ runs:
             fi
             echo "::endgroup::"
          fi
-         test -f out/drivers/kernelsu/*.ko && mv out/drivers/kernelsu/*.ko out
+         test -f out/drivers/kernelsu/*.ko && mv out/drivers/kernelsu/*.ko ../build
 
     - id: uploadi
       if: ${{ inputs.release == 'false' && inputs.anykernel3 == 'false' }}
