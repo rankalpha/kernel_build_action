@@ -70,7 +70,7 @@ jobs:
           ksu-version: main
           ksu-lkm: true
           android-version: 12.1
-          aosp-clang-version: clang-r383902
+          aosp-clang-version: r487747c
           python-27: true
           disable-lto: true
           overlayfs: true
