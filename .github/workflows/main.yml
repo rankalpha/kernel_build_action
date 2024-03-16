@@ -59,21 +59,21 @@ jobs:
     - name: Test CI
       uses: dabao1955/kernel_build_action@main
       with:
-          kernel-url: https://github.com/AcmeUI-Devices/android_kernel_xiaomi_cas
-          kernel-dir: msm-4.19
-          branch: taffy
-          config: cas_defconfig
+          kernel-url: https://github.com/crdroidandroid/android_kernel_xiaomi_sdm660
+          kernel-dir: lavender-12
+          branch: 12.1
+          config: lavender_defconfig
           arch: arm64
           aosp-gcc: true
           aosp-clang: true
           ksu: true
           ksu-version: main
           ksu-lkm: true
-          android-version: 12
+          android-version: 12.1
           aosp-clang-version: r383902
           python-27: true
           disable-lto: true
           overlayfs: true
           lxc: false
           lxc-patch: false
-          anykernel3: true
+          anykernel3: false
